@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShowTime | Distributed Multi-Tenant Movie Ticketing SaaS</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- SockJS & STOMP for Real-Time Seat Synchronization -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+
+    <!-- Login View (Full Page) -->
+    <div id="loginView" style="display: flex; height: 100vh; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; background: var(--bg-color); z-index: 9999;">
+        <div class="glass-panel" style="width: 380px; padding: 2rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="margin-bottom: 0.5rem; color: #fff;">ShowTime Login</h2>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Multi-Tenant SaaS Portal</div>
+            </div>
+            
+            <div id="formLogin">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-secondary);">Username:</label>
+                    <input type="text" id="loginUsername" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.8rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" placeholder="e.g. customer1">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-secondary);">Password:</label>
+                    <input type="password" id="loginPassword" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.8rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" value="password">
+                </div>
+                <button class="btn-primary" style="width: 100%; padding: 0.8rem; border-radius: 4px; font-weight: 600;" onclick="submitLogin()">Sign In</button>
+                <div style="margin-top: 1rem; text-align: center; font-size: 0.85rem;">
+                    <a href="#" onclick="toggleAuthForm()" style="color: var(--accent-blue);">Don't have an account? Sign up</a>
+                </div>
+            </div>
+
+            <div id="formRegister" style="display: none;">
+                <div style="margin-bottom: 0.8rem;">
+                    <input type="text" id="regUsername" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" placeholder="Username">
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <input type="password" id="regPassword" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" placeholder="Password">
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <input type="text" id="regFullName" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" placeholder="Full Name">
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <input type="email" id="regEmail" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" placeholder="Email">
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <select id="regRole" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" onchange="toggleTheatreFields()">
+                        <option value="ROLE_CUSTOMER">Movie Goer (Client)</option>
+                        <option value="ROLE_THEATRE_OWNER">Theatre Owner</option>
+                    </select>
+                </div>
+                <div id="theatreFields" style="display: none; background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 4px; margin-bottom: 0.8rem;">
+                    <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--accent-gold);">Create your Theatre</div>
+                    <input type="text" id="regTheatreName" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; margin-bottom: 0.5rem;" placeholder="Theatre Name">
+                    <input type="text" id="regTheatreCity" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" placeholder="City">
+                </div>
+                <button class="btn-primary" style="width: 100%; padding: 0.8rem; border-radius: 4px; font-weight: 600;" onclick="submitRegister()">Create Account</button>
+                <div style="margin-top: 1rem; text-align: center; font-size: 0.85rem;">
+                    <a href="#" onclick="toggleAuthForm()" style="color: var(--accent-blue);">Already have an account? Sign in</a>
+                </div>
+            </div>
+
+            <div id="loginError" style="color: #ef4444; font-size: 0.85rem; margin-top: 1rem; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Application (Hidden until login) -->
+    <div id="mainAppContent" style="display: none;">
+        
+        <!-- Top Navigation Bar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">🎬</span>
+                <div>
+                    <span class="brand-title">ShowTime</span>
+                    <span class="brand-badge" id="navRoleBadge">Client Portal</span>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <!-- Dynamic Tenant Switcher (Hidden for Client, restricted to their own for Owners) -->
+                <div class="tenant-selector-box" id="navTenantBox">
+                    <span>🏢 Cinema:</span>
+                    <select id="tenantSelect" onchange="onTenantChanged()">
+                        <option value="ALL">🌐 All Cinemas (Browse All)</option>
+                    </select>
+                </div>
+
+                <div class="nav-tabs" id="navTabsContainer">
+                    <!-- Injected dynamically based on role -->
+                </div>
+                
+                <div style="margin-left: 1rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Hi, <span id="navUsername" style="color:#fff;font-weight:600;">-</span></span>
+                    <button class="btn-primary" style="padding: 0.4rem 0.8rem; background: #334155; border: 1px solid #475569;" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+
+            <!-- 1. Customer Booking View -->
+            <section id="bookingView" class="section-view">
+                <div class="hero-banner glass-panel">
+                    <div>
+                        <h1 id="theatreBannerTitle">Now Showing</h1>
+                        <p id="theatreBannerSubtitle">Select a movie and showtime to view real-time seat availability.</p>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--accent-blue);">🛡️ Real-Time Concurrency Guard</span>
+                    </div>
+                </div>
+
+                <!-- Search & Filters Bar (BookMyShow Style) -->
+                <div class="glass-panel search-filter-bar" style="padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                    <div style="flex: 1; min-width: 250px; position: relative;">
+                        <input type="text" id="movieSearchInput" oninput="applyMovieFilters()" placeholder="🔍 Search movies, genre, or language..." class="tenant-selector-box" style="width: 100%; background: #0f172a; color: #fff; padding: 0.7rem 1rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Date:</span>
+                        <div class="filter-chips" id="dateFilterChips">
+                            <button class="filter-chip active" onclick="setDateFilter('ALL', this)">All Dates</button>
+                            <button class="filter-chip" onclick="setDateFilter('TODAY', this)">Today</button>
+                            <button class="filter-chip" onclick="setDateFilter('TOMORROW', this)">Tomorrow</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Genre:</span>
+                        <select id="genreFilterSelect" onchange="applyMovieFilters()" class="tenant-selector-box" style="background: #0f172a; color: #fff; padding: 0.5rem 0.8rem; border-radius: 6px;">
+                            <option value="ALL">All Genres</option>
+                            <option value="Action">Action</option>
+                            <option value="Comedy">Comedy</option>
+                            <option value="Drama">Drama</option>
+                            <option value="Thriller">Thriller</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Sci-Fi">Sci-Fi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Movie Selection Grid -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.3rem;">Movies Playing</h2>
+                    <span id="moviesCountBadge" style="font-size: 0.85rem; color: var(--text-secondary);">Loading shows...</span>
+                </div>
+                <div class="movies-grid" id="moviesContainer">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <!-- Seat Selection Stage (shown when a show is clicked) -->
+                <div id="seatStageContainer" style="display: none; margin-top: 2rem;">
+                    <div class="booking-view-container">
+                        
+                        <!-- 2D Seat Matrix -->
+                        <div class="seat-stage-panel glass-panel">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h2 id="selectedShowHeading" style="font-size: 1.3rem;">Select Seats</h2>
+                                <span id="selectedShowMeta" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                            </div>
+
+                            <div class="screen-curve">
+                                <span class="screen-text">ALL EYES THIS WAY (SCREEN)</span>
+                            </div>
+
+                            <div id="seatMatrix" class="seat-grid"></div>
+
+                            <div class="seat-legend">
+                                <div><span class="seat-swatch swatch-available"></span> Available</div>
+                                <div><span class="seat-swatch swatch-selected"></span> Selected</div>
+                                <div><span class="seat-swatch swatch-held-self"></span> Locked (You)</div>
+                                <div><span class="seat-swatch swatch-held-other"></span> Locked (Other)</div>
+                                <div><span class="seat-swatch swatch-booked"></span> Sold Out</div>
+                            </div>
+                        </div>
+
+                        <!-- Side Cart & Distributed Lock Panel -->
+                        <div class="cart-panel glass-panel">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Your Cart</h3>
+                            
+                            <div class="cart-summary-item">
+                                <span>Seats Selected:</span>
+                                <span id="summaryCount" style="font-weight: 700;">0</span>
+                            </div>
+                            <div class="cart-summary-item">
+                                <span>Seat Numbers:</span>
+                                <span id="summarySeats" style="font-size: 0.9rem; color: var(--text-secondary);">None</span>
+                            </div>
+
+                            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.2);">
+                                <div class="cart-summary-item">
+                                    <span>Subtotal:</span>
+                                    <span id="summarySubtotal">₹0.00</span>
+                                </div>
+                                <div class="cart-summary-item">
+                                    <span>GST (18%):</span>
+                                    <span id="summaryGst">₹0.00</span>
+                                </div>
+                                <div class="cart-summary-item" style="font-size: 1.1rem; font-weight: 700; color: var(--accent-green);">
+                                    <span>Total Amount:</span>
+                                    <span id="summaryTotal">₹0.00</span>
+                                </div>
+                            </div>
+
+                            <div id="lockTimerBox" class="lock-timer-box" style="display: none; flex-direction: column;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-gold); font-weight: 600;">
+                                    <span>⏱️</span> <span id="timerText">Hold expires in: 05:00</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem; line-height: 1.4;">
+                                    Seats are locked in the distributed cache. They will be auto-released if payment isn't completed.
+                                </div>
+                            </div>
+
+                            <button id="btnLockSeats" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; margin-top: 1.5rem; background: var(--accent-blue);" disabled onclick="lockSelectedSeats()">Lock Selected Seats</button>
+                            <button id="btnProceedPayment" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; margin-top: 0.5rem; display: none;" onclick="openPaymentModal()">Proceed to Payment</button>
+                            <button id="btnCancelHold" class="btn-secondary" style="width: 100%; padding: 0.75rem; font-size: 0.9rem; margin-top: 0.5rem; display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5;" onclick="releaseCurrentHold()">Cancel Hold / Change Seats</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Customer My Bookings View -->
+            <section id="myBookingsView" class="section-view">
+                <div class="hero-banner glass-panel" style="margin-bottom: 2rem;">
+                    <div>
+                        <h1>🎟️ My Tickets & Bookings</h1>
+                        <p>View your upcoming show tickets, verified booking vouchers, and past transactions.</p>
+                    </div>
+                    <div>
+                        <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="loadMyBookings()">🔄 Refresh Bookings</button>
+                    </div>
+                </div>
+
+                <div id="myBookingsList" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <!-- Injected dynamically via JS -->
+                </div>
+            </section>
+
+            <!-- 2. Owner Dashboard View -->
+            <section id="ownerView" class="section-view">
+                <div class="hero-banner glass-panel" style="margin-bottom: 2rem;">
+                    <div>
+                        <h1>Theatre Owner Dashboard</h1>
+                        <p>Manage your theatre's movies, screens, shows, and dynamic pricing.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                    <!-- Movie Management -->
+                    <div class="glass-panel" style="flex: 1; padding: 1.5rem;">
+                        <h2 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Add New Movie</h2>
+                        <form id="formAddMovie" onsubmit="handleCreateMovie(event)">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Title:</label>
+                                <input type="text" id="movTitle" required class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Description:</label>
+                                <textarea id="movDesc" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Duration (mins):</label>
+                                    <input type="number" id="movDuration" required class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Genre:</label>
+                                    <input type="text" id="movGenre" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Language:</label>
+                                    <input type="text" id="movLang" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Rating:</label>
+                                    <input type="text" id="movRating" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Poster Image (Base64 string or URL):</label>
+                                <input type="text" id="movPoster" required class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);" placeholder="https://...">
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: 100%;">Save Movie</button>
+                        </form>
+                    </div>
+
+                    <!-- Show Scheduling -->
+                    <div class="glass-panel" style="flex: 1; padding: 1.5rem;">
+                        <h2 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Schedule a Show</h2>
+                        <form id="formScheduleShow" onsubmit="handleScheduleShow(event)">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Movie:</label>
+                                <select id="schedMovieId" required class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);"></select>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Screen:</label>
+                                <select id="schedScreenId" required class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                    <option value="1">Screen 1 (Standard)</option>
+                                    <option value="2">Screen 2 (Premium)</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Date & Time:</label>
+                                <input type="datetime-local" id="schedTime" required class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Standard Price (₹):</label>
+                                    <input type="number" id="schedStdPrice" required value="200" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Premium Price (₹):</label>
+                                    <input type="number" id="schedPremPrice" required value="350" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">VIP Price (₹):</label>
+                                    <input type="number" id="schedVipPrice" required value="500" class="tenant-selector-box" style="width:100%; background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: 100%;">Schedule Show</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Manage Existing Movies -->
+                <div class="glass-panel" style="margin-top: 2rem; padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                        <h2>Manage Existing Movies</h2>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Movies available for scheduling</span>
+                    </div>
+                    <div id="manageMoviesList" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Manage Scheduled Shows (New) -->
+                <div class="glass-panel" style="margin-top: 2rem; padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                        <h2>Manage Scheduled Shows</h2>
+                        <button class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="renderManageShowsList()">🔄 Refresh Shows</button>
+                    </div>
+                    <div id="manageShowsList" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Payment Checkout Modal -->
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h2 style="margin-bottom: 1rem; font-size: 1.3rem;">💳 Simulated Payment Gateway</h2>
+            <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Amount Payable: <strong id="modalPayableAmount" style="color: var(--accent-green); font-size: 1.2rem;">₹0.00</strong>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem;">Payment Method:</label>
+                <select id="paymentMethod" class="tenant-selector-box" style="width: 100%; color: #fff; background: #0f172a; padding: 0.6rem;">
+                    <option value="CARD">Credit / Debit Card (Visa/Mastercard)</option>
+                    <option value="UPI">UPI (Google Pay / PhonePe)</option>
+                    <option value="NETBANKING">Net Banking</option>
+                </select>
+            </div>
+
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.8rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #fca5a5; cursor: pointer;">
+                    <input type="checkbox" id="chkSimulateFailure">
+                    <strong>Simulate Payment Gateway Failure</strong>
+                </label>
+                <p style="font-size: 0.75rem; color: #f87171; margin-top: 0.3rem;">
+                    Demonstrates distributed transaction rollback: If payment fails, held seats are immediately released back to AVAILABLE.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-primary" style="background: #334155;" onclick="closePaymentModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitPayment()">Authorize Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- E-Ticket Confirmation Modal -->
+    <div id="ticketModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-width: 460px;">
+            <div class="ticket-card printable-ticket" id="printableTicketCard">
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--accent-red); margin-bottom: 0.3rem;">🎫 SHOWTIME E-TICKET</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Official Digital Ticket Voucher</div>
+
+                <div style="text-align: left; font-size: 0.85rem; line-height: 1.7; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 0.8rem;">
+                    <div><strong>Movie:</strong> <span id="ticketMovie">-</span></div>
+                    <div><strong>Theatre:</strong> <span id="ticketTheatre">-</span></div>
+                    <div><strong>Screen:</strong> <span id="ticketScreen">-</span></div>
+                    <div><strong>Showtime:</strong> <span id="ticketTime">-</span></div>
+                    <div><strong>Seats:</strong> <span id="ticketSeats" style="color: var(--accent-gold); font-weight: 700;">-</span></div>
+                    <div><strong>Booking Ref:</strong> <span id="ticketBookingRef">-</span></div>
+                    <div><strong>Ticket Ref:</strong> <span id="ticketRef" style="color: var(--accent-blue); font-weight: 700;">-</span></div>
+                    <div><strong>Total Paid:</strong> <span id="ticketTotal" style="color: var(--accent-green); font-weight: 700;">-</span></div>
+                </div>
+
+                <!-- Digital Verification Barcode Mockup -->
+                <div style="margin-top: 1rem; text-align: center; background: #fff; padding: 0.6rem; border-radius: 4px;">
+                    <div style="font-family: monospace; font-size: 1.5rem; letter-spacing: 5px; color: #000; font-weight: 900;">||| | |||| || ||| | ||</div>
+                    <div style="font-size: 0.7rem; color: #333; margin-top: 2px;">SCAN AT TURNSTILE / ADMISSION GATE</div>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; margin-top: 1rem;" class="no-print">
+                    <button class="btn-primary" style="flex: 1; background: #334155;" onclick="closeTicketModal()">Close</button>
+                    <button class="btn-primary" style="flex: 1; background: var(--accent-green);" onclick="printTicket()">🖨️ Print Ticket</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

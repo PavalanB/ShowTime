@@ -1,0 +1,73 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: showtime-platform
+  datasource:
+    url: jdbc:mysql://localhost:3306/cinemeshdb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: Prime@45
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+  webservices:
+    path: /ws
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
+
+cinemesh:
+  security:
+    jwt-secret: cinemeshDistributedSecretKeyForJwtAuthenticationMustBeAtLeast256BitsLong
+    jwt-expiration-ms: 86400000 # 24 hours
+  locking:
+    hold-timeout-seconds: 300 # 5 minutes
+    reaper-interval-ms: 5000 # 5 seconds
+  azure:
+    environment: azure-simulated-vnet
+    vnet-name: vnet-cinemesh-prod
+    nodes:
+      - name: vm-gateway
+        role: "API Gateway, Load Balancer & Web UI"
+        ip: "10.0.1.4"
+        port: 8080
+        services: ["Web Portal", "SOAP Gateway", "WebSocket Broker"]
+      - name: vm-identity
+        role: "Identity & Tenant Management Node"
+        ip: "10.0.2.4"
+        port: 8081
+        services: ["AuthService", "TenantManagementService"]
+      - name: vm-catalog
+        role: "Theatre & Show Scheduling Node"
+        ip: "10.0.3.4"
+        port: 8082
+        services: ["TheatreService", "MovieService", "ShowService"]
+      - name: vm-booking
+        role: "Core Transactions & Distributed Lock Node"
+        ip: "10.0.3.5"
+        port: 8083
+        services: ["SeatService", "CoordinationService", "BookingService"]
+      - name: vm-fulfillment
+        role: "Payment & BI Analytics Node"
+        ip: "10.0.4.4"
+        port: 8084
+        services: ["PaymentService", "TicketService", "NotificationService", "AnalyticsService"]

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/ticket"
+           xmlns:tns="http://cinemesh.com/ws/ticket"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="TicketDto">
+        <xs:sequence>
+            <xs:element name="ticketId" type="xs:long"/>
+            <xs:element name="ticketReference" type="xs:string"/>
+            <xs:element name="bookingReference" type="xs:string"/>
+            <xs:element name="movieTitle" type="xs:string"/>
+            <xs:element name="theatreName" type="xs:string"/>
+            <xs:element name="screenName" type="xs:string"/>
+            <xs:element name="showTime" type="xs:string"/>
+            <xs:element name="customerName" type="xs:string"/>
+            <xs:element name="seatNumbers" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="totalAmount" type="xs:double"/>
+            <xs:element name="qrCodePayload" type="xs:string"/>
+            <xs:element name="validationStatus" type="xs:string"/> <!-- ISSUED, VALIDATED, CANCELLED -->
+            <xs:element name="issuedAt" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="GenerateTicketRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bookingReference" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GenerateTicketResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="ticket" type="tns:TicketDto" minOccurs="0"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ValidateTicketRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="ticketReference" type="xs:string"/>
+                <xs:element name="tenantId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ValidateTicketResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="valid" type="xs:boolean"/>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="ticket" type="tns:TicketDto" minOccurs="0"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

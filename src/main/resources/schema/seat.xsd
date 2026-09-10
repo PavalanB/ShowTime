@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/seat"
+           xmlns:tns="http://cinemesh.com/ws/seat"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="SeatStatusDto">
+        <xs:sequence>
+            <xs:element name="seatId" type="xs:long"/>
+            <xs:element name="seatNumber" type="xs:string"/>
+            <xs:element name="rowName" type="xs:string"/>
+            <xs:element name="seatCol" type="xs:int"/>
+            <xs:element name="category" type="xs:string"/>
+            <xs:element name="price" type="xs:double"/>
+            <xs:element name="status" type="xs:string"/> <!-- AVAILABLE, HELD, BOOKED -->
+            <xs:element name="lockedByUserId" type="xs:long" minOccurs="0"/>
+            <xs:element name="lockExpiresAt" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="GetSeatLayoutRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetSeatLayoutResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+                <xs:element name="screenName" type="xs:string"/>
+                <xs:element name="totalRows" type="xs:int"/>
+                <xs:element name="seatsPerRow" type="xs:int"/>
+                <xs:element name="seats" type="tns:SeatStatusDto" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="CheckSeatAvailabilityRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+                <xs:element name="seatNumbers" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="CheckSeatAvailabilityResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="allAvailable" type="xs:boolean"/>
+                <xs:element name="availableSeats" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="unavailableSeats" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

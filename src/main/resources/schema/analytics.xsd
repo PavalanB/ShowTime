@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/analytics"
+           xmlns:tns="http://cinemesh.com/ws/analytics"
+           elementFormDefault="qualified">
+
+    <xs:element name="GetTenantAnalyticsRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenantId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetTenantAnalyticsResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenantId" type="xs:string"/>
+                <xs:element name="theatreName" type="xs:string"/>
+                <xs:element name="totalBookings" type="xs:long"/>
+                <xs:element name="totalTicketsSold" type="xs:long"/>
+                <xs:element name="totalRevenue" type="xs:double"/>
+                <xs:element name="averageOccupancyRate" type="xs:double"/>
+                <xs:element name="activeScreens" type="xs:int"/>
+                <xs:element name="scheduledShows" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

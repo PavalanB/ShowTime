@@ -1,0 +1,74 @@
+version: '3.8'
+
+networks:
+  cinemesh-vnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/16
+
+services:
+  # Azure VM Node 1: API Gateway, Load Balancer & Web UI
+  vm-gateway:
+    build: .
+    container_name: cinemesh-vm-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=gateway
+    networks:
+      cinemesh-vnet:
+        ipv4_address: 10.0.1.4
+
+  # Azure VM Node 2: Identity & Tenant Management
+  vm-identity:
+    build: .
+    container_name: cinemesh-vm-identity
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_PROFILES_ACTIVE=identity
+    networks:
+      cinemesh-vnet:
+        ipv4_address: 10.0.2.4
+
+  # Azure VM Node 3: Catalog & Scheduling
+  vm-catalog:
+    build: .
+    container_name: cinemesh-vm-catalog
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_PROFILES_ACTIVE=catalog
+    networks:
+      cinemesh-vnet:
+        ipv4_address: 10.0.3.4
+
+  # Azure VM Node 4: Transactions & Distributed Lock
+  vm-booking:
+    build: .
+    container_name: cinemesh-vm-booking
+    ports:
+      - "8083:8083"
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_PROFILES_ACTIVE=booking
+    networks:
+      cinemesh-vnet:
+        ipv4_address: 10.0.3.5
+
+  # Azure VM Node 5: Payment & BI Analytics
+  vm-fulfillment:
+    build: .
+    container_name: cinemesh-vm-fulfillment
+    ports:
+      - "8084:8084"
+    environment:
+      - SERVER_PORT=8084
+      - SPRING_PROFILES_ACTIVE=fulfillment
+    networks:
+      cinemesh-vnet:
+        ipv4_address: 10.0.4.4

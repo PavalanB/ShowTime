@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/tenant"
+           xmlns:tns="http://cinemesh.com/ws/tenant"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="TenantDto">
+        <xs:sequence>
+            <xs:element name="tenantId" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="city" type="xs:string"/>
+            <xs:element name="address" type="xs:string"/>
+            <xs:element name="contactEmail" type="xs:string"/>
+            <xs:element name="active" type="xs:boolean"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="CreateTenantRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenantId" type="xs:string"/>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="city" type="xs:string"/>
+                <xs:element name="address" type="xs:string"/>
+                <xs:element name="contactEmail" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="CreateTenantResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="tenant" type="tns:TenantDto"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetTenantRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenantId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetTenantResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="tenant" type="tns:TenantDto"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ListTenantsRequest">
+        <xs:complexType>
+            <xs:sequence/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ListTenantsResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenants" type="tns:TenantDto" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

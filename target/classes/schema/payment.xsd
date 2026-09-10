@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/payment"
+           xmlns:tns="http://cinemesh.com/ws/payment"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="PaymentDto">
+        <xs:sequence>
+            <xs:element name="paymentId" type="xs:long"/>
+            <xs:element name="transactionId" type="xs:string"/>
+            <xs:element name="bookingReference" type="xs:string"/>
+            <xs:element name="amount" type="xs:double"/>
+            <xs:element name="paymentMethod" type="xs:string"/>
+            <xs:element name="status" type="xs:string"/> <!-- SUCCESS, FAILED, REFUNDED -->
+            <xs:element name="processedAt" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="ProcessPaymentRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bookingReference" type="xs:string"/>
+                <xs:element name="amount" type="xs:double"/>
+                <xs:element name="paymentMethod" type="xs:string"/> <!-- CARD, UPI, NETBANKING -->
+                <xs:element name="simulateFailure" type="xs:boolean" default="false"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ProcessPaymentResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="payment" type="tns:PaymentDto" minOccurs="0"/>
+                <xs:element name="transactionId" type="xs:string" minOccurs="0"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

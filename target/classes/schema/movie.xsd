@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/movie"
+           xmlns:tns="http://cinemesh.com/ws/movie"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="MovieDto">
+        <xs:sequence>
+            <xs:element name="movieId" type="xs:long"/>
+            <xs:element name="title" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+            <xs:element name="durationMinutes" type="xs:int"/>
+            <xs:element name="genre" type="xs:string"/>
+            <xs:element name="language" type="xs:string"/>
+            <xs:element name="posterUrl" type="xs:string"/>
+            <xs:element name="rating" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="AddMovieRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="title" type="xs:string"/>
+                <xs:element name="description" type="xs:string"/>
+                <xs:element name="durationMinutes" type="xs:int"/>
+                <xs:element name="genre" type="xs:string"/>
+                <xs:element name="language" type="xs:string"/>
+                <xs:element name="posterUrl" type="xs:string"/>
+                <xs:element name="rating" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="AddMovieResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="movie" type="tns:MovieDto"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetAllMoviesRequest">
+        <xs:complexType>
+            <xs:sequence/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetAllMoviesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="movies" type="tns:MovieDto" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

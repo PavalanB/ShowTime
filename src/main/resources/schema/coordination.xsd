@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/coordination"
+           xmlns:tns="http://cinemesh.com/ws/coordination"
+           elementFormDefault="qualified">
+
+    <xs:element name="AcquireSeatLockRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+                <xs:element name="customerId" type="xs:long"/>
+                <xs:element name="seatNumbers" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+                <xs:element name="lockDurationSeconds" type="xs:int" default="300"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="AcquireSeatLockResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="lockToken" type="xs:string" minOccurs="0"/>
+                <xs:element name="expiresAt" type="xs:string" minOccurs="0"/>
+                <xs:element name="lockedSeats" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="failedSeats" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ReleaseSeatLockRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+                <xs:element name="lockToken" type="xs:string"/>
+                <xs:element name="customerId" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ReleaseSeatLockResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="releasedSeats" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ValidateSeatLockRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+                <xs:element name="lockToken" type="xs:string"/>
+                <xs:element name="customerId" type="xs:long"/>
+                <xs:element name="seatNumbers" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ValidateSeatLockResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="valid" type="xs:boolean"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

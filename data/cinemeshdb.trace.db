@@ -1,0 +1,6 @@
+2026-09-10 10:07:52.088942+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "POSTER_URL CHARACTER VARYING(512)": "'https://www.google.com/search?sa=X&sca_esv=72b646bfc673cac1&biw=1536&bih=742&sx... (559)"; SQL statement:
+insert into movies (description,duration_minutes,genre,language,poster_url,rating,title,id) values (?,?,?,?,?,?,?,default) [22001-224]
+2026-09-10 10:08:20.614369+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "POSTER_URL CHARACTER VARYING(512)": "'https://www.google.com/search?sa=X&sca_esv=72b646bfc673cac1&biw=1536&bih=742&sx... (559)"; SQL statement:
+insert into movies (description,duration_minutes,genre,language,poster_url,rating,title,id) values (?,?,?,?,?,?,?,default) [22001-224]

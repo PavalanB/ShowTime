@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/booking"
+           xmlns:tns="http://cinemesh.com/ws/booking"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="BookingDto">
+        <xs:sequence>
+            <xs:element name="bookingId" type="xs:long"/>
+            <xs:element name="bookingReference" type="xs:string"/>
+            <xs:element name="showId" type="xs:long"/>
+            <xs:element name="movieTitle" type="xs:string"/>
+            <xs:element name="theatreName" type="xs:string"/>
+            <xs:element name="screenName" type="xs:string"/>
+            <xs:element name="showTime" type="xs:string"/>
+            <xs:element name="customerId" type="xs:long"/>
+            <xs:element name="customerName" type="xs:string"/>
+            <xs:element name="seats" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="totalAmount" type="xs:double"/>
+            <xs:element name="status" type="xs:string"/> <!-- PENDING, CONFIRMED, CANCELLED, FAILED -->
+            <xs:element name="createdAt" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="CreateBookingRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="showId" type="xs:long"/>
+                <xs:element name="customerId" type="xs:long"/>
+                <xs:element name="lockToken" type="xs:string"/>
+                <xs:element name="seatNumbers" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="CreateBookingResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="booking" type="tns:BookingDto" minOccurs="0"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ConfirmBookingRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bookingReference" type="xs:string"/>
+                <xs:element name="paymentTransactionId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ConfirmBookingResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="booking" type="tns:BookingDto" minOccurs="0"/>
+                <xs:element name="ticketReference" type="xs:string" minOccurs="0"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetBookingRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bookingReference" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetBookingResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="booking" type="tns:BookingDto" minOccurs="0"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

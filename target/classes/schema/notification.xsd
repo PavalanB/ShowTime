@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/notification"
+           xmlns:tns="http://cinemesh.com/ws/notification"
+           elementFormDefault="qualified">
+
+    <xs:element name="SendBookingNotificationRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bookingReference" type="xs:string"/>
+                <xs:element name="recipientEmail" type="xs:string"/>
+                <xs:element name="recipientPhone" type="xs:string" minOccurs="0"/>
+                <xs:element name="movieTitle" type="xs:string"/>
+                <xs:element name="showTime" type="xs:string"/>
+                <xs:element name="seats" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="SendBookingNotificationResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+                <xs:element name="notificationId" type="xs:string"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

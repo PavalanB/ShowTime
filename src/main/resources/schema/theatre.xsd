@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://cinemesh.com/ws/theatre"
+           xmlns:tns="http://cinemesh.com/ws/theatre"
+           elementFormDefault="qualified">
+
+    <xs:complexType name="ScreenDto">
+        <xs:sequence>
+            <xs:element name="screenId" type="xs:long"/>
+            <xs:element name="screenNumber" type="xs:int"/>
+            <xs:element name="screenName" type="xs:string"/>
+            <xs:element name="totalRows" type="xs:int"/>
+            <xs:element name="seatsPerRow" type="xs:int"/>
+            <xs:element name="totalSeats" type="xs:int"/>
+            <xs:element name="tenantId" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="CreateScreenRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenantId" type="xs:string"/>
+                <xs:element name="screenNumber" type="xs:int"/>
+                <xs:element name="screenName" type="xs:string"/>
+                <xs:element name="totalRows" type="xs:int"/>
+                <xs:element name="seatsPerRow" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="CreateScreenResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="screen" type="tns:ScreenDto"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetScreensByTenantRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="tenantId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetScreensByTenantResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="screens" type="tns:ScreenDto" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
