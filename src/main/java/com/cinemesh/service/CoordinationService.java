@@ -135,6 +135,20 @@ public class CoordinationService {
         broadcastSeatUpdate(showId, seatNums, "BOOKED");
     }
 
+    @Transactional
+    public void confirmSeatBookingDirect(Long showId, String[] seatNumbers) {
+        List<ShowSeat> seats = showSeatRepository.findByShowIdAndSeatNumberIn(showId, Arrays.asList(seatNumbers));
+        for (ShowSeat seat : seats) {
+            seat.setStatus(SeatStatus.BOOKED);
+            seat.setLockedByUserId(null);
+            seat.setLockToken(null);
+            seat.setLockExpiresAt(null);
+        }
+        showSeatRepository.saveAll(seats);
+        log.info("Confirmed booking for seats {} in show {} (direct, no lock)", Arrays.toString(seatNumbers), showId);
+        broadcastSeatUpdate(showId, Arrays.asList(seatNumbers), "BOOKED");
+    }
+
     private void broadcastSeatUpdate(Long showId, List<String> seatNumbers, String status) {
         try {
             if (messagingTemplate != null) {

@@ -84,9 +84,12 @@ public class BookingService {
         booking.setPaymentTransactionId(paymentTransactionId);
         Booking savedBooking = bookingRepository.save(booking);
 
-        // Transition seats from HELD to BOOKED (skip if no lock token)
+        // Transition seats to BOOKED (works with or without lock token)
         if (booking.getLockToken() != null) {
             coordinationService.confirmSeatBooking(booking.getShowId(), booking.getLockToken());
+        } else {
+            // For bookings without lock (holding feature removed), directly mark seats as BOOKED
+            coordinationService.confirmSeatBookingDirect(booking.getShowId(), booking.getSeatsCsv().split(","));
         }
 
         // Generate Ticket
