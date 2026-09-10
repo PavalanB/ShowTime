@@ -451,55 +451,12 @@ function toggleLocalSeatSelection(seatNumber, element) {
 }
 
 async function lockSelectedSeats() {
-    if (selectedSeats.length === 0) return;
-    
-    try {
-        const res = await fetch(`/api/shows/${selectedShow.id}/lock`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-            body: JSON.stringify({
-                customerId: loggedInUser.userId,
-                seats: selectedSeats,
-                timeoutSeconds: 300
-            })
-        });
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-            currentLockToken = data.lockToken;
-            lockExpiresAt = new Date(data.expiresAt).getTime();
-            startLockTimer();
-            document.getElementById('btnLockSeats').style.display = 'none';
-            document.getElementById('btnProceedPayment').style.display = 'block';
-            const btnCancel = document.getElementById('btnCancelHold');
-            if (btnCancel) btnCancel.style.display = 'block';
-            refreshSeats(selectedShow.id); // Show them as 'held-self'
-        } else {
-            alert(`Could not reserve seat: ${data.message || 'Seat was just locked by another customer!'}`);
-            selectedSeats = [];
-            updateSummaryUI();
-            refreshSeats(selectedShow.id);
-        }
-    } catch (err) {
-        console.error("Lock error:", err);
-    }
+    // Simplified: Skip lock and go straight to payment
+    openPaymentModal();
 }
 
 async function releaseCurrentHold() {
-    if (!selectedShow || !currentLockToken) return;
-    try {
-        await fetch(`/api/shows/${selectedShow.id}/unlock`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                lockToken: currentLockToken,
-                customerId: loggedInUser.userId
-            })
-        });
-    } catch(e) {
-        console.error("Error releasing hold:", e);
-    }
-    
+    // Holding feature removed - no lock to release
     currentLockToken = null;
     clearLockTimer();
     selectedSeats = [];
@@ -529,41 +486,28 @@ function updateSummaryUI() {
     document.getElementById('summaryGst').textContent = `₹${gst.toFixed(2)}`;
     document.getElementById('summaryTotal').textContent = `₹${total.toFixed(2)}`;
 
-    document.getElementById('btnLockSeats').disabled = (count === 0);
+    // Show/hide payment button based on seat selection (no lock step anymore)
+    const btnLock = document.getElementById('btnLockSeats');
+    const btnPayment = document.getElementById('btnProceedPayment');
+    if (count > 0) {
+        if (btnLock) btnLock.style.display = 'none';
+        if (btnPayment) btnPayment.style.display = 'block';
+    } else {
+        if (btnLock) btnLock.style.display = 'block';
+        if (btnPayment) btnPayment.style.display = 'none';
+    }
+    
     document.getElementById('modalPayableAmount').textContent = `₹${total.toFixed(2)}`;
 }
 
-// Lock Countdown Timer
+// Lock Countdown Timer (disabled - no locking feature)
 function startLockTimer() {
+    // Timer feature removed
     clearLockTimer();
-    document.getElementById('lockTimerBox').style.display = 'flex';
-    updateTimerDisplay();
-
-    lockTimerInterval = setInterval(() => {
-        const now = Date.now();
-        const remaining = lockExpiresAt - now;
-        if (remaining <= 0) {
-            clearLockTimer();
-            alert("Your 5-minute seat reservation has expired. Seats have been returned to available status.");
-            selectedSeats = [];
-            currentLockToken = null;
-            document.getElementById('btnLockSeats').style.display = 'block';
-            document.getElementById('btnProceedPayment').style.display = 'none';
-            const btnCancel = document.getElementById('btnCancelHold');
-            if (btnCancel) btnCancel.style.display = 'none';
-            updateSummaryUI();
-            refreshSeats(selectedShow.id);
-        } else {
-            updateTimerDisplay();
-        }
-    }, 1000);
 }
 
 function updateTimerDisplay() {
-    const remaining = Math.max(0, Math.floor((lockExpiresAt - Date.now()) / 1000));
-    const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
-    const secs = String(remaining % 60).padStart(2, '0');
-    document.getElementById('timerText').textContent = `Hold expires in: ${mins}:${secs}`;
+    // Timer feature removed
 }
 
 function clearLockTimer() {
@@ -611,7 +555,7 @@ async function submitPayment() {
             body: JSON.stringify({
                 showId: selectedShow.id,
                 customerId: loggedInUser.userId,
-                lockToken: currentLockToken,
+                lockToken: null,  // No lock feature - booking directly
                 seats: selectedSeats
             })
         });
