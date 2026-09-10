@@ -51,9 +51,12 @@ public class BookingService {
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new IllegalArgumentException("Show not found: " + showId));
 
-        boolean validLock = coordinationService.validateSeatLock(showId, lockToken, customerId, seatNumbers);
-        if (!validLock) {
-            throw new IllegalStateException("Seat reservation lock is invalid or has expired.");
+        // Skip lock validation if no lock token (holding feature removed)
+        if (lockToken != null) {
+            boolean validLock = coordinationService.validateSeatLock(showId, lockToken, customerId, seatNumbers);
+            if (!validLock) {
+                throw new IllegalStateException("Seat reservation lock is invalid or has expired.");
+            }
         }
 
         List<ShowSeat> seats = showSeatRepository.findByShowIdAndSeatNumberIn(showId, seatNumbers);
@@ -81,8 +84,10 @@ public class BookingService {
         booking.setPaymentTransactionId(paymentTransactionId);
         Booking savedBooking = bookingRepository.save(booking);
 
-        // Transition seats from HELD to BOOKED
-        coordinationService.confirmSeatBooking(booking.getShowId(), booking.getLockToken());
+        // Transition seats from HELD to BOOKED (skip if no lock token)
+        if (booking.getLockToken() != null) {
+            coordinationService.confirmSeatBooking(booking.getShowId(), booking.getLockToken());
+        }
 
         // Generate Ticket
         ticketService.generateTicket(bookingReference);
@@ -116,7 +121,7 @@ public class BookingService {
         Booking booking = bookingRepository.findByBookingReference(bookingReference)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found: " + bookingReference));
 
-        if (booking.getStatus() == BookingStatus.PENDING) {
+        if (booking.getStatus() == BookingStatus.PENDING && booking.getLockToken() != null) {
             coordinationService.releaseSeatLock(booking.getShowId(), booking.getLockToken(), booking.getCustomerId());
         }
         booking.setStatus(BookingStatus.CANCELLED);
