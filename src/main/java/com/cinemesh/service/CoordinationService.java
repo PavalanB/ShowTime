@@ -3,6 +3,7 @@ package com.cinemesh.service;
 import com.cinemesh.common.SeatStatus;
 import com.cinemesh.model.ShowSeat;
 import com.cinemesh.repository.ShowSeatRepository;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
@@ -31,6 +32,7 @@ public class CoordinationService {
     public static class LockResult {
         private final boolean success;
         private final String lockToken;
+        @JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
         private final LocalDateTime expiresAt;
         private final List<String> lockedSeats;
         private final List<String> failedSeats;
