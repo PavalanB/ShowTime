@@ -394,8 +394,8 @@ public class PortalApiController {
 
             ticketService.getTicketByBookingReference(b.getBookingReference()).ifPresent(t -> {
                 map.put("ticketReference", t.getTicketReference());
-                map.put("validationCode", t.getValidationCode());
-                map.put("ticketStatus", t.getStatus().name());
+                map.put("validationCode", t.getTicketReference());
+                map.put("ticketStatus", t.getValidationStatus());
             });
 
             result.add(map);
